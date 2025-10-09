@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Module 6 – Compound Interest Visual Simulator (Monthly Compounding)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f7f9fc;
+      --panel:#ffffff;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --txt:#0f172a;
+      --accent:#2563eb;
+      --accent-2:#3b82f6;
+      --ok:#059669;
+      --border:#e5e7eb;
+      --shadow: 0 4px 14px rgba(15,23,42,.08);
+      --radius:18px;
+      --pill:9999px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color:var(--txt);
+      background:linear-gradient(180deg,#fafbff 0%, #f3f4f6 100%);
+    }
+    .wrap{max-width:1200px;margin:40px auto;padding:0 20px}
+
+    h1{
+      font-family:'Poppins', sans-serif;
+      font-weight:600;
+      font-size:2rem;
+      letter-spacing:0.2px;
+      margin:0 0 4px;
+      color:#1e293b;
+    }
+    .subtitle{color:var(--muted);margin-bottom:20px;font-size:0.95rem}
+
+    .grid{display:grid;grid-template-columns:400px 1fr;gap:24px}
+    @media (max-width: 1000px){.grid{grid-template-columns:1fr}}
+
+    .panel{background:var(--panel);border:1px solid var(--border);box-shadow:var(--shadow);border-radius:var(--radius)}
+    .panel h2{font-family:'Poppins',sans-serif;font-weight:500;font-size:1.1rem;color:#1f2937;margin:0 0 12px}
+    .panel .body{padding:22px}
+
+    .group{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+    .group.full{grid-template-columns:1fr}
+    label{font-size:12px;color:var(--muted);display:block;margin-bottom:8px}
+
+    input{
+      width:100%;
+      padding:12px 16px;
+      border-radius:var(--pill);
+      background:#fff;
+      border:1px solid var(--border);
+      color:var(--txt);
+      outline:none;
+      transition:border-color .15s, box-shadow .15s;
+    }
+    input:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(37,99,235,.18)}
+
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+
+    .btn{padding:11px 18px;border-radius:var(--pill);border:1px solid var(--border);cursor:pointer;background:#fff;color:var(--txt);transition:.15s;font-family:'Poppins',sans-serif;font-weight:600}
+    .btn:hover{transform:translateY(-1px); box-shadow:0 8px 18px rgba(15,23,42,.08)}
+    .btn.primary{background:linear-gradient(180deg,var(--accent-2),var(--accent));border-color:var(--accent);color:#fff}
+
+    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
+    @media (max-width: 900px){.cards{grid-template-columns:1fr}}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow);text-align:center}
+    .metric{font-size:13px;color:var(--muted);letter-spacing:.2px;font-family:'Inter',sans-serif}
+    .value{font-family:'Poppins',sans-serif;font-weight:700;font-size:24px;margin-top:8px;color:#0f172a}
+
+    .legend{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:10px 0 0}
+    .legend .key{display:inline-flex;align-items:center;gap:10px;color:#1f2937;background:#eef2ff;border:1px solid var(--border);border-radius:var(--pill);padding:6px 12px;font-family:'Inter',sans-serif;font-size:13px}
+    .swatch{width:14px;height:10px;border-radius:3px;display:inline-block}
+
+    canvas{display:block;background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}
+
+    table{width:100%;border-collapse:collapse;margin-top:12px;background:#fff;border-radius:16px;overflow:hidden}
+    th,td{padding:12px 10px;border-bottom:1px solid var(--border);font-size:13px;color:#0f172a;font-family:'Inter',sans-serif}
+    th{color:#374151;font-weight:700;text-align:left;background:#f9fafb}
+    tbody tr:hover{background:#f3f4f6}
+
+    .note{color:var(--muted);font-size:12px;margin-top:10px;font-family:'Inter',sans-serif}
+
+    /* New: Full width summary panel */
+    #tablePanel { grid-column: 1 / -1; margin-top:24px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Compound Interest Visual Simulator</h1>
+    <div class="subtitle">Assumes weekly deposits and <strong>monthly compounding</strong> (typical for savings accounts). Compare two starting ages with a smooth yearly chart and a concise summary.</div>
+
+    <div class="grid">
+      <section class="panel">
+        <div class="body">
+          <h2>Inputs</h2>
+          <div class="group">
+            <div>
+              <label>Weekly savings (A$)</label>
+              <input id="weekly" type="number" min="0" step="1" value="50"/>
+            </div>
+            <div>
+              <label>Annual interest rate (% p.a.)</label>
+              <input id="rate" type="number" min="0" step="0.1" value="7"/>
+            </div>
+          </div>
+          <div class="group">
+            <div>
+              <label>Start age – Scenario A</label>
+              <input id="ageA" type="number" min="0" step="1" value="20"/>
+            </div>
+            <div>
+              <label>Start age – Scenario B</label>
+              <input id="ageB" type="number" min="0" step="1" value="30"/>
+            </div>
+          </div>
+          <div class="group full">
+            <div>
+              <label>Retirement age</label>
+              <input id="retire" type="number" min="30" step="1" value="65"/>
+            </div>
+          </div>
+          <div class="group full">
+            <div class="row">
+              <button class="btn primary" id="run">Run</button>
+              <button class="btn" id="reset">Reset</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="body">
+          <h2>Growth Over Time</h2>
+          <div class="legend" id="legend"></div>
+          <canvas id="chart" width="900" height="440"></canvas>
+          <div class="cards" id="metrics"></div>
+          <div class="note">Chart shows end‑of‑year balances (nominal). Weekly deposits with monthly compounding.</div>
+        </div>
+      </section>
+
+      <section class="panel" id="tablePanel">
+        <div class="body">
+          <h2>Scenario Summary</h2>
+          <table id="summaryTable">
+            <thead>
+              <tr>
+                <th>Scenario</th>
+                <th>Start Age</th>
+                <th>Years Contributing</th>
+                <th>Total Contributed</th>
+                <th>Interest Earned</th>
+                <th>Final Balance</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script>
+    const $ = (id)=>document.getElementById(id);
+    const fmtMoney = (v)=> new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD',maximumFractionDigits:0}).format(v||0);
+    const clamp = (v,min,max)=> Math.max(min, Math.min(max, v));
+
+    function ageYearsToWeeks(age){ return Math.round(age*52); }
+
+    function simulate({startAge, retireAge, weekly, annualRate}){
+      const compPerYear = 12;
+      startAge = Number(startAge); retireAge = Number(retireAge);
+      weekly = Number(weekly); annualRate = Number(annualRate)/100;
+
+      const totalWeeks = ageYearsToWeeks(retireAge - startAge);
+      const r_step = Math.pow(1+annualRate, 1/compPerYear) - 1;
+      const stepPerWeek = compPerYear/52;
+
+      let balance = 0;
+      let contributed = 0;
+      let compAcc = 0;
+
+      const weeklySeries = [];
+      for(let w=0; w<=totalWeeks; w++){
+        balance += weekly; contributed += weekly;
+        compAcc += stepPerWeek;
+        while(compAcc >= 1){ balance *= (1 + r_step); compAcc -= 1; }
+        weeklySeries.push(balance);
+      }
+
+      const interestEarned = Math.max(0, balance - contributed);
+      return { weeklySeries, totals:{ contributed, interestEarned, finalNominal: balance, yearsContrib:(retireAge-startAge) } };
+    }
+
+    function yearlySamples(minAge, retireAge, startAge, weeklySeries){
+      const years = Math.round(retireAge - minAge);
+      const labels = [];
+      const data = [];
+      for(let y=0; y<=years; y++){
+        const age = Math.floor(minAge + y);
+        labels.push(String(age));
+        const weeksFromStart = Math.round((age - startAge + 1) * 52) - 1;
+        if(age < startAge){ data.push(0); }
+        else{
+          const idx = Math.min(Math.max(0, weeksFromStart), weeklySeries.length-1);
+          data.push(weeklySeries[idx]);
+        }
+      }
+      return { labels, data };
+    }
+
+    let chart;
+    function renderChart(labels, datasets){
+      const ctx = $("chart").getContext('2d');
+      if(chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type:'line',
+        data:{ labels, datasets },
+        options:{
+          responsive:false,
+          interaction:{ mode:'index', intersect:false },
+          plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:(c)=>`${c.dataset.label}: ${fmtMoney(c.parsed.y)}` } } },
+          elements:{ line:{ tension:0.3, cubicInterpolationMode:'monotone' }, point:{ radius:0 } },
+          scales:{
+            x:{ ticks:{ color:'#334155', font:{family:'Inter', size:12} }, grid:{ color:'#e5e7eb'} },
+            y:{ ticks:{ color:'#334155', callback:(v)=>fmtMoney(v), font:{family:'Inter', size:12} }, grid:{ color:'#e5e7eb'} }
+          }
+        }
+      });
+    }
+
+    function updateLegend(items){
+      const el = $("legend");
+      el.innerHTML = items.map(i=>`<span class='key'><span class='swatch' style='background:${i.color}'></span>${i.label}</span>`).join('');
+    }
+
+    function metricCard(title, value){ return `<div class='card'><div class='metric'>${title}</div><div class='value'>${value}</div></div>`; }
+    function setMetrics(A, B){
+      const m = $("metrics");
+      const deltaNom = A.totals.finalNominal - B.totals.finalNominal;
+      const who = deltaNom>=0 ? 'A leads' : 'B leads';
+      m.innerHTML = [
+        metricCard('Final balance (A)', fmtMoney(A.totals.finalNominal)),
+        metricCard('Final balance (B)', fmtMoney(B.totals.finalNominal)),
+        metricCard('Advantage', `${who} by ${fmtMoney(Math.abs(deltaNom))}`)
+      ].join('');
+    }
+
+    function fillTable(A, B){
+      const tbody = document.querySelector('#summaryTable tbody');
+      const row = (name, startAge, t)=> `<tr><td><strong>${name}</strong></td><td>${startAge}</td><td>${t.yearsContrib.toFixed(1)}</td><td>${fmtMoney(t.contributed)}</td><td>${fmtMoney(t.interestEarned)}</td><td>${fmtMoney(t.finalNominal)}</td></tr>`;
+      tbody.innerHTML = row('A', Number($("ageA").value), A.totals) + row('B', Number($("ageB").value), B.totals);
+    }
+
+    function run(){
+      const weekly = clamp(Number($("weekly").value)||0, 0, 1e6);
+      const rate = clamp(Number($("rate").value)||0, 0, 100);
+      const ageA = Number($("ageA").value);
+      const ageB = Number($("ageB").value);
+      const retire = Number($("retire").value);
+
+      const params = { weekly, annualRate: rate, retireAge: retire };
+      const A = simulate({startAge: ageA, ...params});
+      const B = simulate({startAge: ageB, ...params});
+
+      const minAge = Math.min(ageA, ageB);
+      const ysA = yearlySamples(minAge, retire, ageA, A.weeklySeries);
+      const ysB = yearlySamples(minAge, retire, ageB, B.weeklySeries);
+
+      const labels = ysA.labels;
+      const datasets = [
+        { label:`A (start ${ageA})`, data: ysA.data, borderColor:'#2563eb', cubicInterpolationMode:'monotone', tension:0.35 },
+        { label:`B (start ${ageB})`, data: ysB.data, borderColor:'#059669', cubicInterpolationMode:'monotone', tension:0.35 }
+      ];
+
+      renderChart(labels, datasets);
+      updateLegend([
+        {color:'#2563eb', label:`A: start age ${ageA}`},
+        {color:'#059669', label:`B: start age ${ageB}`}
+      ]);
+      setMetrics(A, B);
+      fillTable(A, B);
+    }
+
+    $("run").addEventListener('click', run);
+    $("reset").addEventListener('click', ()=>{
+      $("weekly").value=50; $("rate").value=7; $("ageA").value=20; $("ageB").value=30; $("retire").value=65; run();
+    });
+
+    run();
+  </script>
+</body>
+</html>
+
